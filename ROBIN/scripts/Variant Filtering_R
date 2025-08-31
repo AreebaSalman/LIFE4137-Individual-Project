@@ -1,0 +1,85 @@
+# Install Bioconductor manager if missing 
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+# Install Bioconductor package for VCF parsing
+BiocManager::install("VariantAnnotation")
+
+# Install CRAN packages for data wrangling 
+install.packages("dplyr")
+install.packages("readr")
+install.packages("tibble")   # useful for clean tables
+install.packages("tidyr")    # used for tidy reshaping
+
+
+# Load required packages
+  library(VariantAnnotation)   # For parsing VCF files
+  library(dplyr)              # For filtering and ranking
+  library(readr)              # For clean table output
+
+# Set VCF file path 
+vcf_file <- "C:/Users/HP/Desktop/Individual_project/survivor/ROBIN"
+
+# Read the VCF
+vcf <- readVcf(vcf_file)
+
+# Extract INFO fields 
+info_df <- info(vcf)
+
+# Coordinates
+start_pos <- start(rowRanges(vcf))
+end_pos   <- end(rowRanges(vcf))
+
+# Variant type (SVTYPE), quality, and length
+svtype <- as.character(info_df$SVTYPE)
+svlen  <- abs(as.numeric(info_df$SVLEN))   # always positive length
+qual   <- as.numeric(qual(vcf))
+
+# Build a clean dataframe 
+df <- data.frame(
+  CHROM   = seqnames(rowRanges(vcf)),
+  START   = start_pos,
+  END     = end_pos,
+  SVTYPE  = svtype,
+  SVLEN   = svlen,
+  QUAL    = qual,
+  stringsAsFactors = FALSE
+)
+
+# Filter by quality > 40
+df <- df %>% filter(QUAL > 40)
+
+# Function: get top 10 events for each type
+get_top10 <- function(data, type) {
+  data %>%
+    filter(SVTYPE == type) %>%
+    arrange(desc(SVLEN)) %>%
+    slice_head(n = 10)
+}
+
+# Extract largest 10 of each type 
+top_del <- get_top10(df, "DEL")
+top_dup <- get_top10(df, "DUP")
+top_inv <- get_top10(df, "INV")
+
+# For BND/TRA, many callers use "BND". If TRA is used, adjust accordingly.
+top_tra <- get_top10(df, "BND")
+
+# Combine results
+top_all <- bind_rows(
+  mutate(top_del, Category = "Deletion"),
+  mutate(top_dup, Category = "Duplication"),
+  mutate(top_inv, Category = "Inversion"),
+  mutate(top_tra, Category = "Translocation")
+)
+
+# Save outputs
+# Full table
+write_csv(top_all, "top10_SVs_per_type_robin.csv")
+
+# Individual tables
+write_csv(top_del, "top10_deletions_robin.csv")
+write_csv(top_dup, "top10_duplications_robin.csv")
+write_csv(top_inv, "top10_inversions_robin.csv")
+write_csv(top_tra, "top10_translocations_robin.csv")
+
