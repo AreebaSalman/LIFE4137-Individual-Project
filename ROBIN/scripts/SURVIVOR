@@ -1,0 +1,52 @@
+#!/bin/bash
+#SBATCH --partition=defq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32g
+#SBATCH --time=06:00:00
+#SBATCH --job-name=survivor_robin
+#SBATCH --output=/gpfs01/home/mbxas26/CNS/logs/slurm-%x-%j.out
+#SBATCH --error=/gpfs01/home/mbxas26/CNS/logs/slurm-%x-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mbxas26@exmail.nottingham.ac.uk
+
+# load module
+source "$HOME/.bash_profile"
+conda activate survivor    # make sure SURVIVOR and bcftools/bgzip/tabix are in this env
+
+# -------- inputs (ROBIN) --------
+SNIFFLES_VCF="/gpfs01/home/mbxas26/CNS/epi2me_rob/sniffles/output_rnames.vcf"   
+CUTESV_VCF="/gpfs01/home/mbxas26/CNS/cuteSV/output_robin/robin.vcf"
+SVIM_VCF="gpfs01/home/mbxas26/CNS/svim/output_robin/variants.vcf"   
+
+# -------- outputs --------
+OUTDIR="/gpfs01/home/mbxas26/CNS/merged/robin"
+mkdir -p "$OUTDIR"
+LIST="${OUTDIR}/input_files.txt"
+MERGED_VCF="${OUTDIR}/robin_merged.vcf"
+
+# bgzip + index inputs if plain VCFs (SURVIVOR accepts plain or gz)
+# for f in "$SNIFFLES_VCF" "$CUTESV_VCF" "$SVIM_VCF"; do
+#   [[ "$f" =~ \.gz$ ]] || { bgzip -f "$f"; tabix -f -p vcf "${f}.gz"; }
+# done
+
+# -------- SURVIVOR merge ----------
+# Params: <list> <maxDist=500> <minCallers=2> <type=1> <strand=1> <estDist=0> <minSize=30> <out>
+SURVIVOR merge "$LIST" 500 2 1 1 0 30 "$MERGED_VCF"
+
+# -------- split by SVTYPE ----------
+for T in DEL DUP INV BND; do
+  OUT="${OUTDIR}/robin_${T}.vcf"
+  bcftools view -i "INFO/SVTYPE==\"${T}\"" "$MERGED_VCF" -o "$OUT" -O v
+  bgzip -f "$OUT"
+  tabix -f -p vcf "${OUT}.gz"
+done
+
+# also compress/index the merged set
+bgzip -f "$MERGED_VCF"
+tabix -f -p vcf "${MERGED_VCF}.gz"
+
+
+# deactivate environment after completion
+conda deactivate
