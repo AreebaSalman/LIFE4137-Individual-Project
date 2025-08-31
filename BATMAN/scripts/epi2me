@@ -1,0 +1,40 @@
+
+#!/bin/bash
+
+#SBATCH --partition=defq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128g
+#SBATCH --time=120:00:00
+#SBATCH --job-name=epi2me_bat
+#SBATCH --output=/gpfs01/home/mbxas26/CNS/epi2me_bat/logs/slurm-%x-%j.out
+#SBATCH --error=/gpfs01/home/mbxas26/CNS/epi2me_bat/logs/slurm-%x-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mbxas26@exmail.nottingham.ac.uk
+
+source $HOME/.bash_profile
+
+conda activate nextflow
+
+# load modules
+module load singularity/3.8.5  #load module
+
+cd /gpfs01/home/mbxas26/CNS/project_files  #path to files
+
+nextflow run epi2me-labs/wf-human-variation -r v2.6.0 \  #nextflow command
+        --bam '/gpfs01/home/mbxas26/CNS/project_files/sort_25D016162_bm.bam' \   #path to bam file
+        --ref '/gpfs01/home/mbxas26/CNS/project_files/Homo_sapiens.GRCh38.dna.primary_assembly.fa' \  #path to reference file
+        --bed '/gpfs01/home/mbxas26/CNS/project_files/sort_25D016162_3col_non-prefix_validated_bm.bed' \   #path to bed file
+        --sample_name 'CNS_bat' \  #name of sample
+        --snp \  #single nucleotide polymorphism
+        --sv \   #structural variants
+        --cnv \  #copy number variants
+        --mod \  #modified bases
+        --bam_min_coverage 1.0 \  #min coverage for a bam file to show variants
+        --phased \  #performs phasing
+        --out_dir '/gpfs01/home/mbxas26/CNS/epi2me_bat/output1' \  #path to output directory
+        --max_cpus 32 \  #number of cpus
+        -profile singularity
+
+conda deactivate
