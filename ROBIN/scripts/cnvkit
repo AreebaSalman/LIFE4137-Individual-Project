@@ -1,0 +1,44 @@
+#!/bin/bash
+
+#SBATCH --partition=defq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128g
+#SBATCH --time=48:00:00
+#SBATCH --job-name=cnvkit_robin
+#SBATCH --output=/gpfs01/home/mbxas26/CNS/cnvkit/logs/slurm-%x-%j.out
+#SBATCH --error=/gpfs01/home/mbxas26/CNS/cnvkit/logs/slurm-%x-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mbxas26@exmail.nottingham.ac.uk
+
+# Load environment
+source $HOME/.bash_profile
+
+# Activate conda environment with CNVkit installed
+conda activate cnvkit
+
+# Run CNVkit in batch mode for the Robin sample
+# Command: cnvkit.py batch <bam> -r <reference.cnn> -d <output_dir>
+# Arguments:
+#   BAM → input aligned reads
+#   -r  → flat reference (assumes uniform genome coverage)
+#   -d  → output directory
+cnvkit.py batch /gpfs01/home/mbxas26/CNS/project_files/sort_25D016162.bam \
+    -r /gpfs01/home/mbxas26/CNS/cnvkit/flat_reference.cnn \
+    -d /gpfs01/home/mbxas26/CNS/cnvkit/cnvkit_output_robin
+
+# After running 'batch', CNVkit produces .cnr (bin-level ratios) and .cns (segment-level calls)
+# You can visualize these with scatter plots.
+
+# Generate scatter plot of copy number for this sample 
+# - cnr file = bin-level log2 copy ratios
+# - cns file = segmented copy ratios
+# Output = PNG scatter plot
+cnvkit.py scatter \
+    /gpfs01/home/mbxas26/CNS/cnvkit/cnvkit_output_robin/sort_25D016162.cnr \
+    -s /gpfs01/home/mbxas26/CNS/cnvkit/cnvkit_output_robin/sort_25D016162.cns \
+    -o /gpfs01/home/mbxas26/CNS/cnvkit/cnvkit_output_robin/robin_scatter.png
+
+# Deactivate conda environment after run
+conda deactivate  
