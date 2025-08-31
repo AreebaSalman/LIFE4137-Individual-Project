@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#SBATCH --partition=defq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128g
+#SBATCH --time=48:00:00
+#SBATCH --job-name=sniffles
+#SBATCH --output=/gpfs01/home/mbxas26/CNS/epi2me/logs/slurm-%x-%j.out
+#SBATCH --error=/gpfs01/home/mbxas26/CNS/epi2me/logs/slurm-%x-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mbxas26@exmail.nottingham.ac.uk
+
+source $HOME/.bash_profile
+
+conda activate sniffles
+
+cd /gpfs01/home/mbxas26/CNS/project_files  #path to bam files
+
+sniffles -i /gpfs01/home/mbxas26/CNS/project_files/sort_25D016162.bam -v /gpfs01/home/mbxas26/CNS/epi2me/sniffles/output.vcf --minsupport 1 --output-rnames
+           # path to bam file                                              #path to output file                          #minimum supporting reads for SV  #Include read names supporting each variant
+conda deactivate
