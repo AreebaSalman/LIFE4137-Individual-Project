@@ -1,0 +1,43 @@
+#!/bin/bash
+
+#SBATCH --partition=defq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128g
+#SBATCH --time=48:00:00
+#SBATCH --job-name=cnvkit
+#SBATCH --output=/gpfs01/home/mbxas26/CNS/cnvkit/logs/slurm-%x-%j.out
+#SBATCH --error=/gpfs01/home/mbxas26/CNS/cnvkit/logs/slurm-%x-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mbxas26@exmail.nottingham.ac.uk
+
+# Load environment
+source $HOME/.bash_profile
+
+# Activate conda environment with CNVkit installed
+conda activate cnvkit
+
+# Run CNVkit in batch mode for the Batman sample
+# Command: cnvkit.py batch <bam> -r <reference.cnn> -d <output_dir>
+# Arguments:
+#   BAM → input aligned reads
+#   -r  → flat reference (assumes uniform genome coverage)
+#   -d  → output directory
+cnvkit.py batch /gpfs01/home/mbxas26/CNS/project_files/sort_25D016162_bm.bam \
+    -r /gpfs01/home/mbxas26/CNS/cnvkit/flat_reference.cnn \
+    -d /gpfs01/home/mbxas26/CNS/cnvkit/cnvkit_output_batman
+
+# After running 'batch', CNVkit produces:
+#   - .cnr file = bin-level log2 copy ratios
+#   - .cns file = segmented copy ratios
+# These can be visualized with scatter plots.
+
+# Example: Generate scatter plot of copy number for this sample
+cnvkit.py scatter \
+    /gpfs01/home/mbxas26/CNS/cnvkit/cnvkit_output_batman/sort_25D016162_bm.cnr \
+    -s /gpfs01/home/mbxas26/CNS/cnvkit/cnvkit_output_batman/sort_25D016162_bm.cns \
+    -o /gpfs01/home/mbxas26/CNS/cnvkit/cnvkit_output_batman/batman_scatter.png
+
+# Deactivate conda environment after run
+conda deactivate
