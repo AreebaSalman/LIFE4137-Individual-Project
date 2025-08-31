@@ -1,0 +1,189 @@
+Venn Diagram
+# Load the package
+library(VennDiagram)
+
+# Read VCFs
+sniffles_vcf <- read.vcfR("C:/Users/HP/Desktop/Individual_project/robbin/output.vcf")
+svim_vcf     <- read.vcfR("C:/Users/HP/Desktop/Individual_project/svim/robin/variants.vcf")
+cutesv_vcf   <- read.vcfR("C:/Users/HP/Desktop/Individual_project/cuteSV/robin.vcf")
+
+# Create unique variant IDs: CHROM:POS:SVTYPE
+get_ids <- function(vcf) {
+  chrom <- getCHROM(vcf)
+  pos   <- getPOS(vcf)
+  info  <- vcf@fix[, "INFO"]
+  svtype <- sub(".*SVTYPE=([^;]+).*", "\\1", info)
+  paste(chrom, pos, svtype, sep = ":")
+}
+
+sniffles_ids <- get_ids(sniffles_vcf)
+svim_ids     <- get_ids(svim_vcf)
+cutesv_ids   <- get_ids(cutesv_vcf)
+
+# Draw Venn diagram
+venn.plot <- venn.diagram(
+  x = list(
+    Sniffles = sniffles_ids,
+    SVIM     = svim_ids,
+    CuteSV   = cutesv_ids
+  ),
+  filename = NULL,
+  fill = c("skyblue", "pink1", "palegreen3"),
+  alpha = 0.5,
+  cex = 2,
+  cat.cex = 1.5,
+  cat.fontface = "bold",
+  main = "Overlap of Structural Variants (ROBBIN)",
+  main.cex = 2
+)
+
+png("SV_overlap_venn_diagram_robin.png", width = 2000, height = 2000, res = 300)
+grid.draw(venn.plot)
+dev.off()
+
+
+# Read VCFs
+sniffles_vcf <- read.vcfR("C:/Users/HP/Desktop/Individual_project/batman/output.vcf")
+svim_vcf     <- read.vcfR("C:/Users/HP/Desktop/Individual_project/svim/variants.vcf")
+cutesv_vcf   <- read.vcfR("C:/Users/HP/Desktop/Individual_project/cuteSV/bat.vcf")
+
+# Create unique variant IDs: CHROM:POS:SVTYPE
+get_ids <- function(vcf) {
+  chrom <- getCHROM(vcf)
+  pos   <- getPOS(vcf)
+  info  <- vcf@fix[, "INFO"]
+  svtype <- sub(".*SVTYPE=([^;]+).*", "\\1", info)
+  paste(chrom, pos, svtype, sep = ":")
+}
+
+sniffles_ids <- get_ids(sniffles_vcf)
+svim_ids     <- get_ids(svim_vcf)
+cutesv_ids   <- get_ids(cutesv_vcf)
+
+# Draw Venn diagram
+venn.plot <- venn.diagram(
+  x = list(
+    Sniffles = sniffles_ids,
+    SVIM     = svim_ids,
+    CuteSV   = cutesv_ids
+  ),
+  filename = NULL,
+  fill = c("skyblue", "pink1", "palegreen3"),
+  alpha = 0.5,
+  cex = 2,
+  cat.cex = 1.5,
+  cat.fontface = "bold",
+  main = "Overlap of Structural Variants (BATMAN)",
+  main.cex = 2
+)
+
+png("SV_overlap_venn_diagram_batman.png", width = 2000, height = 2000, res = 300)
+grid.draw(venn.plot)
+dev.off()
+
+
+# SV length
+# load packages
+library(vcfR)
+library(ggplot2)
+
+# Define VCF file paths
+sniffles_vcf <- "C:/Users/HP/Desktop/Individual_project/robbin/output.vcf"
+svim_vcf     <- "C:/Users/HP/Desktop/Individual_project/svim/robin/variants.vcf"
+cutesv_vcf   <- "C:/Users/HP/Desktop/Individual_project/cuteSV/robin.vcf"
+
+# Function to extract SVTYPE and SVLEN from a VCF
+parse_sv_data <- function(vcf_path, tool_name) {
+  vcf <- read.vcfR(vcf_path, verbose = FALSE)
+  info <- vcf@fix[, "INFO"]
+  chrom <- vcf@fix[, "CHROM"]
+  pos <- as.numeric(vcf@fix[, "POS"])
+  
+  svtype <- sub(".*SVTYPE=([^;]+).*", "\\1", info)
+  svlen_raw <- sub(".*SVLEN=-?([0-9]+).*", "\\1", info)
+  svlen <- as.numeric(ifelse(grepl("SVLEN=", info), svlen_raw, NA))
+  
+  data.frame(
+    CHROM = chrom,
+    POS = pos,
+    SVTYPE = svtype,
+    SVLEN = abs(svlen),  # Make lengths positive
+    Tool = tool_name,
+    stringsAsFactors = FALSE
+  )
+}
+
+# Extract data from each VCF
+sv_sniffles <- parse_sv_data(sniffles_vcf, "Sniffles2")
+sv_svim     <- parse_sv_data(svim_vcf, "SVIM")
+sv_cutesv   <- parse_sv_data(cutesv_vcf, "CuteSV")
+
+# Combine all into one dataframe
+sv_all <- rbind(sv_sniffles, sv_svim, sv_cutesv)
+
+# Filter invalid or extremely large SVs
+sv_all <- subset(sv_all, !is.na(SVTYPE) & !is.na(SVLEN) & SVLEN < 1e6)
+
+# Plot: SV Size Distribution by Type
+ggplot(sv_all, aes(x = SVLEN, fill = SVTYPE)) +
+  geom_histogram(binwidth = 1000, alpha = 0.7, position = "identity") +
+  facet_wrap(~SVTYPE, scales = "free_y") +
+  theme_minimal() +
+  scale_x_continuous(labels = scales::comma) +
+  labs(title = "Structural Variant Size Distribution by Type (ROBIN)",
+       x = "SV Length (bp)", y = "Count") +
+  theme(legend.position = "none")
+
+# Save the last plot
+ggsave("SV_Size_Distribution_robin.png", width = 10, height = 6, dpi = 300)
+
+
+# SV per chromosome
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
+
+#Step 1: Define file paths
+sniffles_vcf <- "C:/Users/HP/Desktop/Individual_project/robbin/output.vcf"
+svim_vcf     <- "C:/Users/HP/Desktop/Individual_project/svim/robin/variants.vcf"
+cutesv_vcf   <- "C:/Users/HP/Desktop/Individual_project/cuteSV/robin.vcf"
+
+# Step 2: Function to extract CHROM (with header fix) 
+read_vcf_chroms <- function(vcf_path, caller_name) {
+  df <- read_tsv(vcf_path, comment = "##", col_names = TRUE)
+  colnames(df)[1] <- "CHROM"  # Rename first column from '#CHROM' to 'CHROM'
+  df <- df %>% filter(grepl("^chr[0-9XY]+$", CHROM))  # Keep only standard chromosomes
+  df$Caller <- caller_name
+  return(df %>% select(CHROM, Caller))
+}
+
+# Step 3: Read VCFs
+sniffles_data <- read_vcf_chroms(sniffles_vcf, "Sniffles2")
+svim_data     <- read_vcf_chroms(svim_vcf, "SVIM")
+cutesv_data   <- read_vcf_chroms(cutesv_vcf, "CuteSV")
+
+# Step 4: Combine 
+sv_all <- bind_rows(sniffles_data, svim_data, cutesv_data)
+
+# Step 5: Count SVs per chromosome 
+sv_counts <- sv_all %>%
+  group_by(Caller, CHROM) %>%
+  summarise(SV_Count = n(), .groups = "drop")
+
+# Fix chromosome order
+sv_counts$CHROM <- factor(sv_counts$CHROM, levels = paste0("chr", c(1:22, "X", "Y")))
+
+# Step 6: Plot 
+ggplot(sv_counts, aes(x = CHROM, y = SV_Count, fill = Caller)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "SV Burden per Chromosome (ROBIN)", x = "Chromosome", y = "Number of SVs") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+# Step 7: Save Plot 
+ggsave("SV_Burden_Per_Chromosome_robin.png", width = 10, height = 6, dpi = 300)
+
+
