@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#SBATCH --partition=defq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128g
+#SBATCH --time=48:00:00
+#SBATCH --job-name=samplot_chr2_robin
+#SBATCH --output=/gpfs01/home/mbxas26/CNS/samplot/logs/slurm-%x-%j.out
+#SBATCH --error=/gpfs01/home/mbxas26/CNS/samplot/logs/slurm-%x-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mbxas26@exmail.nottingham.ac.uk
+
+# Load environment
+source $HOME/.bash_profile
+
+# Activate conda environment with Samplot installed
+conda activate samplot
+
+# Run Samplot to visualize a duplication event in the ROBIN sample
+samplot plot \
+    -n 25D016162 \                                   # Sample name/ID (Robin sample)
+    -b /gpfs01/home/mbxas26/CNS/project_files/sort_25D016162.bam \  # Input BAM file for Robin sample
+    -o chr2_robin.png \                              # Output plot file (PNG image)
+    -c chr2 \                                        # Chromosome to plot
+    -s 90379794 \                                    # Start coordinate of the region of interest
+    -e 90402423 \                                    # End coordinate of the region of interest
+    -t DUP                                           # Structural variant type: Duplication
+
+# Deactivate conda environment after run
+conda deactivate
