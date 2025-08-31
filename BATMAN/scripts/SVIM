@@ -1,0 +1,41 @@
+#!/bin/bash
+
+#SBATCH --partition=defq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128g
+#SBATCH --time=48:00:00
+#SBATCH --job-name=svim
+#SBATCH --output=/gpfs01/home/mbxas26/CNS/svim/logs/slurm-%x-%j.out
+#SBATCH --error=/gpfs01/home/mbxas26/CNS/svim/logs/slurm-%x-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mbxas26@exmail.nottingham.ac.uk
+source $HOME/.bash_profile
+conda activate svim   # Activate conda environment with SVIM installed
+
+# Set paths
+OUTDIR="/gpfs01/home/mbxas26/CNS/svim/output"                # Directory where SVIM output will be stored
+BAM="/gpfs01/home/mbxas26/CNS/project_files/sort_25D016162_bm.bam"  # Input BAM file (Batman sample)
+REF="/gpfs01/home/mbxas26/CNS/reference/hg38.fa"             # Reference genome (hg38, FASTA)
+
+# Create output directory if it doesn’t already exist
+mkdir -p "$OUTDIR"
+
+# Run SVIM structural variant calling
+# Command: svim alignment <output_dir> <bam_file> <reference>
+# Options:
+#   --minimum_score 1    → Minimum score threshold for an SV to be reported
+#   --minimum_depth 1    → Minimum read depth required to support a call
+#   --min_mapq 10        → Minimum mapping quality for reads considered
+#   --types DEL,INS,INV,DUP:TANDEM,BND → Detect deletions, insertions, inversions, tandem duplications, and breakends
+#   --read_names         → Output the names of reads supporting each variant
+svim alignment "$OUTDIR" "$BAM" "$REF" \
+  --minimum_score 1 \
+  --minimum_depth 1 \
+  --min_mapq 10 \
+  --types DEL,INS,INV,DUP:TANDEM,BND \
+  --read_names
+
+# Deactivate conda environment after completion
+conda deactivate
