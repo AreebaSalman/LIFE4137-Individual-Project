@@ -1,0 +1,43 @@
+#!/bin/bash
+
+#SBATCH --partition=defq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128g
+#SBATCH --time=48:00:00
+#SBATCH --job-name=cuteSV_robin
+#SBATCH --output=/gpfs01/home/mbxas26/CNS/cuteSV/logs/slurm-%x-%j.out
+#SBATCH --error=/gpfs01/home/mbxas26/CNS/cuteSV/logs/slurm-%x-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mbxas26@exmail.nottingham.ac.uk
+  source $HOME/.bash_profile
+
+conda activate cuteSV   # Activate conda environment with cuteSV installed
+
+# Define input/output file paths
+BAM="/gpfs01/home/mbxas26/CNS/project_files/sort_25D016162.bam"   # Input aligned BAM file
+REF="/gpfs01/home/mbxas26/CNS/reference/hg38.fa"                   # Reference genome (FASTA)
+OUTVCF="/gpfs01/home/mbxas26/CNS/cuteSV/output_robin/robin.vcf"    # Output VCF file for structural variants
+TMPDIR="/gpfs01/home/mbxas26/CNS/cuteSV/tmp_robin"                 # Temporary directory for intermediate files
+
+# Create temp directory if it doesn’t already exist
+mkdir -p "$TMPDIR"
+
+# Run cuteSV structural variant calling
+# Arguments:
+#   BAM       → input alignments
+#   REF       → reference genome
+#   OUTVCF    → output VCF file
+#   TMPDIR    → directory for temp files
+# Options:
+#   --threads 32  → use 32 CPU threads
+#   --genotype   → perform genotyping of detected SVs
+#   --min_support 1 → minimum supporting reads per SV
+cuteSV "$BAM" "$REF" "$OUTVCF" "$TMPDIR" \
+  --threads 32 \
+  --genotype \
+  --min_support 1
+
+# Deactivate conda environment after run
+conda deactivate
