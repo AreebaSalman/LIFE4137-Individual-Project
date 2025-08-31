@@ -1,0 +1,30 @@
+#!/bin/bash
+
+#SBATCH --partition=defq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128g
+#SBATCH --time=48:00:00
+#SBATCH --job-name=bedtools_anootation
+#SBATCH --output=/gpfs01/home/mbxas26/CNS/bedtools/logs/slurm-%x-%j.out
+#SBATCH --error=/gpfs01/home/mbxas26/CNS/bedtools/logs/slurm-%x-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mbxas26@exmail.nottingham.ac.uk
+
+# Load environment
+source $HOME/.bash_profile
+
+# Activate conda environment with Bedtools installed
+conda activate bedtools
+
+# Use Bedtools to intersect CNV regions with gene annotations
+bedtools intersect \
+  -a /gpfs01/home/mbxas26/CNS/vcf2bed/VCF-to-BED/bam_bat/cleaned_output_cnv.bed \   # Input file A: CNVs in BED format (Batman sample)
+  -b /gpfs01/home/mbxas26/CNS/reference/Homo_sapiens.GRCh38.114.genes.chr.bed \     # Input file B: Reference BED with gene coordinates (GRCh38, Ensembl v114)
+  -wa \                                                                            # Write the original CNV entry from file A for overlaps
+  -wb \                                                                            # Write the full overlapping gene entry from file B
+  > /gpfs01/home/mbxas26/CNS/bedtools/bam_bat/annotated_cnv_bam.bed                 # Output: annotated CNVs with overlapping gene names
+
+# Deactivate conda environment after run
+conda deactivate
