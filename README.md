@@ -6,157 +6,138 @@
 
 ---
 
-## Overview
-This repository accompanies my MSc thesis *“Understanding Rearrangements in CNS Tumors.”*  
+## Background  
 
-It provides **scripts and workflows** for reproducing the code and figures (Circos plots, CNVs, IGV screenshots) described in the thesis.  
+This project investigates **structural variants (SVs)** and **copy number variations (CNVs)** in CNS tumor genomes using Oxford Nanopore long-read sequencing.  
 
-The project compares two Nanopore sequencing workflows:  
-- **ROBIN** → baseline workflow (methylation classification, SV/CNV calling)  
-- **BATMAN** → extended workflow (adaptive sampling, breakpoint enrichment)  
+Two workflows were compared:  
+- **ROBIN** → baseline pipeline (methylation classification, SV & CNV calling)  
+- **BATMAN** → extended pipeline (adaptive sampling with real-time breakpoint enrichment)  
 
----
-
-## Tools & Environments
-
-<details>
-<summary><b>Click to expand</b></summary>
-
-### SV Calling
-- Sniffles2  
-- cuteSV  
-- SVIM  
-- Epi2me `wf-human-variation`
-
-### SV Merging & Filtering
-- SURVIVOR  
-
-### Visualization
-- IGV  
-- Samplot  
-- Ribbon  
-- Circos-style Python scripts (in this repo)  
-
-### CNV Analysis
-- CNVkit  
-
-### Annotation
-- Bedtools  
-- COSMIC CGC v96  
-- Ensembl biomaRt (R)  
-
-### Supporting
-- Samtools  
-- Bcftools  
-- R (`VariantAnnotation`, `ggplot2`, `dplyr`, `eulerr`)  
-
-</details>
+This study aims to investigate structural variants (SVs) (Hurles et al. 2008) in central nervous system (CNS) tumors using long read nanopore sequencing, and to evaluate the performance and effectiveness of two analytical pipelines, ROBIN(Deacon et al. 2025) and BATMAN, in detecting these variants.  
 
 ---
 
-.
-├── BATMAN/
-│ ├── make_circos_batman.py # Circos plot with SV links
-│ └── example_batman_sv.csv # Example input for Fig. 8a
-│
-├── ROBIN/
-│ ├── make_circos_robin_blank.py # Chromosome circle only
-│ └── example_robin.csv # Empty placeholder
-│
-├── data/ # Example SV/CNV input tables
-├── results/ # Output directory for PNG/PDF figures
-├── envs/ # Conda environment YAMLs
-├── README.md # This file
+## Input Data – Obtaining BAM files  
 
-## Setup
+- Basecalled Nanopore reads were processed through the **ROBIN** and **BATMAN** workflows.  
+- Final **BAM files** for each sample were used as input for downstream SV calling.  
+- These BAMs are **not hosted** here due to size restrictions, but all subsequent scripts assume you start from a sorted BAM.  
 
-<details>
-<summary><b>Click to expand installation steps</b></summary>
+---
 
-### Clone
+## Reference Genome Preparation  
+
+We used **GRCh38.p14** from Ensembl as the reference genome.  
+
 ```bash
-git clone https://github.com/AreebaSalman/LIFE4137-Individual-Project.git
-cd LIFE4137-Individual-Project
-Conda environment (minimal)
-
-conda create -n SV
-conda activate SV
-
-conda install bioconda::sniffles= 2.6.3
-conda install bioconda::cutesv= 2.1.2
-conda install bioconda::svim= 2.0.0
-conda install bioconda::survivor= 1.0.3
-conda install bioconda::samtools= 1.21
-conda install bioconda::samplot= 1.3.0
-conda install bioconda::circus= v1.10.0
-conda install bioconda::cnvkit= 0.9.10
-conda install bioconda::bedtools= v2.31.1
-
-</details>
-Workflow Steps
-<details> <summary><b>1. Reference Genome Preparation</b></summary>
-
+# Download reference genome from Ensembl
 wget ftp://ftp.ensembl.org/pub/release-114/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
-gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
-samtools faidx Homo_sapiens.GRCh38.dna.primary_assembly.fa
-</details> <details> <summary><b>2. Structural Variant Calling</b></summary>
 
+# Unzip
+gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
+
+# Index reference for samtools
+samtools faidx Homo_sapiens.GRCh38.dna.primary_assembly.fa
+Structural Variant Detection
+Three SV callers were used: Sniffles2, cuteSV, and SVIM.
+
+Each was installed and run in its own conda environment.
+
+Install environments
+# Create environment
+conda create -n sv-callers -y
+conda activate sv-callers
+
+# Install tools
+conda install -c bioconda sniffles=2.0
+conda install -c bioconda cutesv
+conda install -c bioconda svim
+Run commands
 # Sniffles2
 sniffles --input sample.bam --vcf sniffles.vcf --minsupport 5 --output-rnames
 
 # cuteSV
-cuteSV sample.bam ref.fa cutesv.vcf ./cutesv_output
+cuteSV sample.bam Homo_sapiens.GRCh38.dna.primary_assembly.fa cutesv.vcf ./cutesv_output
 
 # SVIM
-svim alignment svim_out/ sample.bam ref.fa
-</details> <details> <summary><b>3. Merging & Filtering with SURVIVOR</b></summary>
+svim alignment svim_out/ sample.bam Homo_sapiens.GRCh38.dna.primary_assembly.fa
+Merging and Filtering of SVs
+We merged VCF outputs from the three callers using SURVIVOR, requiring at least 2 callers to support an event and a maximum distance of 500 bp.
 
+Install SURVIVOR
+conda install -c bioconda survivor
+Run command
+# input_files.txt contains the VCFs (sniffles.vcf, cutesv.vcf, svim.vcf)
 SURVIVOR merge input_files.txt 500 2 1 1 0 30 merged.vcf
+Variant Filtering and Prioritization
+To reduce false positives and focus on biologically meaningful events:
+
+Variants with QUAL > 40 were kept.
+
+For each SV type (DEL, DUP, INV, TRA), the top 10 events by size were retained.
+
+This filtering was performed downstream in R/Python scripts (provided separately).
+
+Visualization and Validation
+Variants were validated using multiple visualization tools.
+
+IGV
+Manual inspection of BAM alignments for:
+
+Deletions → drop in coverage + split reads
+
+Duplications → spike in coverage
+
+Inversions → inward/outward facing reads
+
+Translocations → split reads mapping to other chromosomes
+
+Prepare files for IGV:
+samtools index sample.bam
 bcftools index merged.vcf
-</details> <details> <summary><b>4. Visualization & Validation</b></summary>
-IGV: inspect breakpoints (coverage dips, split/supplementary reads).
-
-Samplot:
+Samplot
+conda install -c bioconda samplot
 samplot plot -n SAMPLE -b sample.bam -c chr3 -s 75376331 -e 75591822 -t DEL -o sv.png
-Ribbon: load BAM at genomeribbon.com.
+Ribbon
+Upload BAM files to Ribbon for read-level visualization of complex events.
 
-Circos plots:
+Circos-style Plots
+Python scripts included here were used for genome-wide SV mapping:
+# BATMAN Circos plot
 python BATMAN/make_circos_batman.py --csv BATMAN/example_batman_sv.csv --out_prefix results/chromosomal_map_BATMAN
+
+# ROBIN Circos plot
 python ROBIN/make_circos_robin_blank.py --out_prefix results/chromosomal_map_ROBIN
-</details> <details> <summary><b>5. CNV Analysis (CNVkit)</b></summary>
+Comparison of Variant Callers
+We compared Sniffles2, cuteSV, and SVIM:
 
-cnvkit.py batch sample.bam --fasta ref.fa --output-dir cnvkit_out/ --diagram --scatter
-</details> <details> <summary><b>6. Annotation</b></summary>
+Venn diagrams generated in R (eulerr package) to show overlaps.
 
+Concordance evaluated at merged events (SURVIVOR).
+
+ROBIN vs BATMAN outputs were compared to highlight the effect of adaptive sampling.
+
+Annotation
+To interpret the biological relevance, SVs were annotated against cancer gene databases.
+
+Install bedtools
+conda install -c bioconda bedtools
+Run annotation
 bedtools intersect -a merged.vcf -b COSMIC_CGCv96.bed -wa -wb > SVs_with_genes.tsv
-Annotation also performed in R with VariantAnnotation and biomaRt.
+R-based annotation
+biomaRt for gene annotation
 
-</details>
- Input Data
-Full BAM/VCF files are not included (size/privacy).
+VariantAnnotation for VCF parsing
 
-Example CSVs with SV coordinates are provided for reproducing figures.
+ggplot2/dplyr for visualization
 
-All data preparation steps are detailed in the thesis.
+Data Availability
+Scripts and summary tables are available in this repository.
 
-Figures Reproduced
-BATMAN Circos plot (SV links)
+BAM/VCF files are too large and not uploaded, but are stored on Ada HPC and available upon request.
 
-ROBIN Circos plot (ideogram only)
-
-CNV plots – CNVkit 
-
-IGV screenshots – deletions, duplications, inversions, translocations
-
-Samplot – standardized SV visualizations
-
-Ribbon – read-level translocations
-
-📜 Data Availability
-Scripts and summary tables are hosted here.
-Full BAM/VCF files are stored on Ada HPC (University of Nottingham) and available upon request.
-
-🙏 Acknowledgements
+Acknowledgements
 Supervisor: Prof. Matthew Loose
 
 Mentors: Thomas Murray, Simon Deacon
@@ -166,7 +147,3 @@ Ada HPC team (University of Nottingham)
 📌 Citation
 Salman, A. (2025). Understanding Rearrangements in CNS Tumors. MSc Thesis, University of Nottingham.
 GitHub: https://github.com/AreebaSalman/LIFE4137-Individual-Project
-
-
-
-
