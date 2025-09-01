@@ -18,6 +18,21 @@ This study aims to investigate structural variants (SVs) (Hurles et al. 2008) in
 
 ---
 
+## Methodology 
+
+```mermaid
+flowchart TD
+    A[Input Data: BAM files (ROBIN & BATMAN)] --> B[Reference Genome: GRCh38 (Ensembl)]
+    B --> C[SV Calling: Sniffles2, cuteSV, SVIM]
+    C --> D[Merging & Filtering: SURVIVOR (500 bp, ≥2 callers)]
+    D --> E[Variant Filtering: QUAL > 40, top 10 per SV type]
+    E --> F[Visualization & Validation: IGV, Samplot, Ribbon, Circos]
+    F --> G[CNV Analysis: CNVkit]
+    G --> H[Annotation: COSMIC CGC, biomaRt, bedtools]
+```
+
+---
+
 ## Input Data – BAM Files  
 
 - Basecalled Nanopore reads were processed using **ROBIN** and **BATMAN** workflows.  
