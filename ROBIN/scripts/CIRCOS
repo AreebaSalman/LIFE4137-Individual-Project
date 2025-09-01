@@ -1,0 +1,68 @@
+#!/bin/bash
+
+#SBATCH --partition=defq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128g
+#SBATCH --time=48:00:00
+#SBATCH --job-name=circos_robin
+#SBATCH --output=/gpfs01/home/mbxas26/CNS/circos/logs/slurm-%x-%j.out
+#SBATCH --error=/gpfs01/home/mbxas26/CNS/circos/logs/slurm-%x-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mbxas26@exmail.nottingham.ac.uk
+
+# Load environment
+source $HOME/.bash_profile
+
+conda activate circos
+
+import math, numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+CHROMS = [f"chr{i}" for i in range(1,23)] + ["chrX","chrY"]
+
+def draw_colored_ideogram(ax, r=1.0, label_r=1.12):
+    N = len(CHROMS)
+    angle_per_chr = 2*math.pi / N
+    start = {CHROMS[i]: i*angle_per_chr for i in range(N)}
+
+    # thin outer ring
+    th = np.linspace(0, 2*math.pi, 720)
+    ax.plot(r*np.cos(th), r*np.sin(th), lw=1.0, color="#BBBBBB", zorder=1)
+
+    # colorful arcs
+    cmap = plt.get_cmap("tab20", N)
+    for i, c in enumerate(CHROMS):
+        t = np.linspace(start[c], start[c]+angle_per_chr, 80)
+        ax.plot(r*np.cos(t), r*np.sin(t), lw=6, solid_capstyle="butt",
+                color=cmap(i), zorder=2)
+        mid = start[c] + angle_per_chr/2
+        ax.text(r*label_r*np.cos(mid), r*label_r*np.sin(mid), c.replace("chr",""),
+                ha="center", va="center", fontsize=9,
+                rotation=np.degrees(mid)+90, rotation_mode='anchor')
+
+def main():
+    fig = plt.figure(figsize=(9,9), dpi=300)
+    ax = plt.gca(); ax.set_aspect("equal"); ax.axis("off")
+    draw_colored_ideogram(ax, r=1.0, label_r=1.12)
+
+    # Title
+    ax.text(0, 1.25, "Chromosomal map (ROBIN)", ha="center", va="center",
+            fontsize=16, weight="bold")
+
+    # Optional annotation (uncomment if you want it shown in the figure)
+    # ax.text(0, 0, "No structural variants detected", ha="center",
+    #         va="center", fontsize=11, style="italic")
+
+    plt.tight_layout()
+    plt.savefig("chromosomal_map_ROBIN.png", dpi=300, bbox_inches="tight")
+    plt.savefig("chromosomal_map_ROBIN.pdf", bbox_inches="tight")
+
+if __name__ == "__main__":
+    main()
+
+# Deactivate environment after run
+conda deactivate
