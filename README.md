@@ -75,6 +75,7 @@ We required ≥2 callers to support an event within a 500 bp window.
 ### Installation
 ```bash
 conda create -n survivor -y
+conda activate survivor
 conda install -c bioconda survivor= 1.0.3
 ```
 
@@ -113,6 +114,7 @@ Translocations → reads mapping to multiple chromosomes
 ### Prepare files for IGV:
 ```bash
 conda create -n samtools -y
+conda activate samtools
 conda install bioconda::samtools= 1.21
 
 samtools index sample.bam
@@ -122,6 +124,7 @@ bcftools index merged.vcf
 ### Samplot
 ```bash
 conda create -n samplot -y
+conda activate samplot
 conda install -c bioconda samplot
 samplot plot -n SAMPLE -b sample.bam -c chr3 -s 75376331 -e 75591822 -t DEL -o sv.png
 ```
@@ -156,6 +159,7 @@ SVs were annotated to identify overlaps with cancer-related genes.
 ### Installation
 ```bash
 conda create -n bedtools -y
+conda activate bedtools
 conda install -c bioconda bedtools
 ```
 ### Running
