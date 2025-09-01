@@ -79,7 +79,7 @@ For each SV type (DEL, DUP, INV, TRA), the top 10 events by size were retained.
 
 This filtering was performed downstream in R/Python scripts (provided separately).
 
-Visualization and Validation
+## Visualization and Validation
 Variants were validated using multiple visualization tools.
 
 IGV
@@ -118,7 +118,7 @@ Concordance evaluated at merged events (SURVIVOR).
 
 ROBIN vs BATMAN outputs were compared to highlight the effect of adaptive sampling.
 
-Annotation
+## Annotation
 To interpret the biological relevance, SVs were annotated against cancer gene databases.
 
 Install bedtools
@@ -132,18 +132,18 @@ VariantAnnotation for VCF parsing
 
 ggplot2/dplyr for visualization
 
-Data Availability
+## Data Availability
 Scripts and summary tables are available in this repository.
 
 BAM/VCF files are too large and not uploaded, but are stored on Ada HPC and available upon request.
 
-Acknowledgements
+## Acknowledgements
 Supervisor: Prof. Matthew Loose
 
 Mentors: Thomas Murray, Simon Deacon
 
 Ada HPC team (University of Nottingham)
 
-📌 Citation
+## Citation
 Salman, A. (2025). Understanding Rearrangements in CNS Tumors. MSc Thesis, University of Nottingham.
 GitHub: https://github.com/AreebaSalman/LIFE4137-Individual-Project
