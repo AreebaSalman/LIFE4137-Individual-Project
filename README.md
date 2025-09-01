@@ -20,16 +20,42 @@ This study aims to investigate structural variants (SVs) (Hurles et al. 2008) in
 
 ## Methodology 
 
-```mermaid
-flowchart TD
-    A[Input Data: BAM files (ROBIN and BATMAN)] --> B[Reference Genome (GRCh38 Ensembl)]
-    B --> C[SV Calling: Sniffles2, cuteSV, SVIM]
-    C --> D[Merging and Filtering: SURVIVOR (500 bp, min 2 callers)]
-    D --> E[Variant Filtering: QUAL > 40, top 10 per SV type]
-    E --> F[Visualization and Validation: IGV, Samplot, Ribbon, Circos]
-    F --> G[CNV Analysis: CNVkit]
-    G --> H[Annotation: COSMIC CGC, biomaRt, bedtools]
-```
+The analysis followed these main steps:
+
+1. **Input Data**
+   - Nanopore sequencing reads processed using ROBIN and BATMAN workflows
+   - Sorted BAM files generated for downstream analysis
+
+2. **Reference Genome**
+   - GRCh38.p14 downloaded from Ensembl
+   - Indexed with samtools for compatibility with SV callers
+
+3. **Structural Variant Detection**
+   - SVs called independently using:
+     - Sniffles2
+     - cuteSV
+     - SVIM
+
+4. **Merging and Filtering**
+   - Calls merged with SURVIVOR (500 bp window, minimum 2 callers)
+
+5. **Variant Filtering and Prioritization**
+   - Retained variants with QUAL > 40
+   - Selected top 10 events per SV type by size
+
+6. **Visualization and Validation**
+   - Manual inspection in IGV
+   - Automated plots with Samplot
+   - Read-level visualization in Ribbon
+   - Genome-wide summary using Circos-style plots
+
+7. **CNV Analysis**
+   - Copy number variation profiling with CNVkit
+
+8. **Annotation**
+   - Overlap analysis with COSMIC CGC v96
+   - Gene annotation using Ensembl biomaRt and bedtools
+
 
 ---
 
