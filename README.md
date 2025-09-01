@@ -169,11 +169,11 @@ bedtools intersect -a merged.vcf -b COSMIC_CGCv96.bed -wa -wb > SVs_with_genes.t
 
 Annotation was further refined in R using:
 
-biomaRt for gene annotation
+-biomaRt for gene annotation
 
-VariantAnnotation for VCF parsing
+-VariantAnnotation for VCF parsing
 
-ggplot2 and dplyr for visualization
+-ggplot2 and dplyr for visualization
 
 ## Data Availability
 
