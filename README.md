@@ -1,10 +1,10 @@
-Understanding Rearrangements in CNS Tumors
+# Understanding Rearrangements in CNS Tumors
 
 Author: Areeba Salman
 Degree: MSc Bioinformatics – Individual Project (2025)
 Institution: University of Nottingham
 
-📌 Background
+## Background
 
 This project investigates structural variants (SVs) and copy number variations (CNVs) in CNS tumor genomes using Oxford Nanopore long-read sequencing.
 
@@ -16,7 +16,7 @@ BATMAN → extended pipeline (adaptive sampling with real-time breakpoint enrich
 
 The aim was to identify rearrangements and validate them through multiple variant callers and visualization tools.
 
-📂 Input Data – Obtaining BAM files
+## Input Data – Obtaining BAM files
 
 Basecalled Nanopore reads were processed through the ROBIN and BATMAN workflows.
 
@@ -24,20 +24,20 @@ Final BAM files for each sample were used as input for downstream SV calling.
 
 These BAMs are not hosted here due to size restrictions, but all subsequent scripts assume you start from a sorted BAM.
 
-🧬 Reference Genome Preparation
+## Reference Genome Preparation
 
 We used GRCh38.p14 from Ensembl as the reference genome.
 
-# Download reference genome from Ensembl
+## Download reference genome from Ensembl
 wget ftp://ftp.ensembl.org/pub/release-114/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
 
-# Unzip
+Unzip
 gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
 
-# Index reference for samtools
+Index reference for samtools
 samtools faidx Homo_sapiens.GRCh38.dna.primary_assembly.fa
 
-🔎 Structural Variant Detection
+## Structural Variant Detection
 
 Three SV callers were used: Sniffles2, cuteSV, and SVIM.
 
