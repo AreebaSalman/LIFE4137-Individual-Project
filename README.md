@@ -6,7 +6,7 @@
 
 ---
 
-## 📌 Overview
+## Overview
 This repository accompanies my MSc thesis *“Understanding Rearrangements in CNS Tumors.”*  
 
 It provides **scripts and workflows** for reproducing the code and figures (Circos plots, CNVs, IGV screenshots) described in the thesis.  
@@ -17,7 +17,7 @@ The project compares two Nanopore sequencing workflows:
 
 ---
 
-## 🧰 Tools & Environments
+## Tools & Environments
 
 <details>
 <summary><b>Click to expand</b></summary>
@@ -54,6 +54,18 @@ The project compares two Nanopore sequencing workflows:
 
 ---
 
-## 📂 Repository Structure
+.
+├── BATMAN/
+│ ├── make_circos_batman.py # Circos plot with SV links
+│ └── example_batman_sv.csv # Example input for Fig. 8a
+│
+├── ROBIN/
+│ ├── make_circos_robin_blank.py # Chromosome circle only
+│ └── example_robin.csv # Empty placeholder
+│
+├── data/ # Example SV/CNV input tables
+├── results/ # Output directory for PNG/PDF figures
+├── envs/ # Conda environment YAMLs
+├── README.md # This file
 
 
