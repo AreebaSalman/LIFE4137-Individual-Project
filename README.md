@@ -14,7 +14,7 @@ Two workflows were compared:
 - **ROBIN** → baseline pipeline (methylation classification, SV & CNV calling)  
 - **BATMAN** → extended pipeline (adaptive sampling with real-time breakpoint enrichment)  
 
-The aim was to identify genomic rearrangements and validate them through multiple variant callers and visualization tools.  
+This study aims to investigate structural variants (SVs) (Hurles et al. 2008) in central nervous system (CNS) tumors using long read nanopore sequencing, and to evaluate the performance and effectiveness of two analytical pipelines, ROBIN(Deacon et al. 2025) and BATMAN, in detecting these variants.   
 
 ---
 
@@ -50,9 +50,9 @@ SVs were identified using Sniffles2, cuteSV, and SVIM.
 conda create -n sv-callers -y
 conda activate sv-callers
 
-conda install -c bioconda sniffles=2.0
-conda install -c bioconda cutesv
-conda install -c bioconda svim
+conda install -c bioconda sniffles= 2.6.3
+conda install -c bioconda cutesv= 2.1.2
+conda install -c bioconda svim= 2.0.0
 ```
 
 ### Running
@@ -74,7 +74,8 @@ We required ≥2 callers to support an event within a 500 bp window.
 
 ### Installation
 ```bash
-conda install -c bioconda survivor
+conda create -n survivor -y
+conda install -c bioconda survivor= 1.0.3
 ```
 
 Running
@@ -109,14 +110,18 @@ Inversions → orientation changes
 
 Translocations → reads mapping to multiple chromosomes
 
-Prepare files for IGV:
+### Prepare files for IGV:
 ```bash
+conda create -n samtools -y
+conda install bioconda::samtools= 1.21
+
 samtools index sample.bam
 bcftools index merged.vcf
 ```
 
 ### Samplot
 ```bash
+conda create -n samplot -y
 conda install -c bioconda samplot
 samplot plot -n SAMPLE -b sample.bam -c chr3 -s 75376331 -e 75591822 -t DEL -o sv.png
 ```
@@ -150,6 +155,7 @@ SVs were annotated to identify overlaps with cancer-related genes.
 
 ### Installation
 ```bash
+conda create -n bedtools -y
 conda install -c bioconda bedtools
 ```
 ### Running
